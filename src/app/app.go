@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"stock-bot/src/archiver"
+	"stock-bot/src/app/archiver"
 	"strings"
 	"sync"
 	"syscall"
