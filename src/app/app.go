@@ -41,7 +41,7 @@ func App() *cli.App {
 			// Setup stock-archiver
 			{
 				log.Print("STARTING: stock-archiver service")
-				deduped := dedupeTickerSymbols(cfg.Symbols)
+				deduped := dedupTickerSymbols(cfg.Symbols)
 				if len(deduped) < 1 {
 					return errors.New("error: must provide at least one ticker symbol")
 				}
@@ -83,7 +83,7 @@ func App() *cli.App {
 	}
 }
 
-func dedupeTickerSymbols(symbols []string) []string {
+func dedupTickerSymbols(symbols []string) []string {
 	var deduped []string
 	seen := make(map[string]bool)
 	for _, s := range symbols {

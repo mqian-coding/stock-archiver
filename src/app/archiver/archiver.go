@@ -2,14 +2,14 @@ package archiver
 
 import (
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"os"
+	"stock-bot/src/app/api"
 	"strconv"
 	"sync"
 	"time"
-
-	"github.com/piquette/finance-go/quote"
 )
 
 const CSV_STORAGE_PATH = "out/"
@@ -31,6 +31,10 @@ func Worker(cfg WorkerCfg) {
 		panic(err)
 	}
 	w := csv.NewWriter(file)
+	if err = writeHeader(w); err != nil {
+		log.Printf("error: failed to write the csv header")
+		panic(err)
+	}
 	d := time.Now().Day()
 
 	for {
@@ -81,15 +85,22 @@ func makeNewCSV(name string) (*os.File, error) {
 	return file, err
 }
 
-func logQuotes(symbol string, w *csv.Writer) error {
-	q, err := quote.Get(symbol)
-	if err != nil || q == nil {
+func logQuotes(ticker string, w *csv.Writer) error {
+	req := api.InitDefaultRequest(ticker)
+	q, err := req.GetQuote()
+	if err != nil {
 		return err
 	}
+
+	if q.Chart.Result == nil {
+		return errors.New("no data in returned result")
+	}
+
+	if q.Chart.Error != nil {
+		return errors.New("error in returned data")
+	}
 	row := []string{
-		strconv.FormatFloat(q.Bid, 'E', -1, 64),
-		strconv.FormatFloat(q.Ask, 'E', -1, 64),
-		strconv.FormatFloat(q.RegularMarketPrice, 'E', -1, 64)}
+		strconv.FormatFloat(q.Chart.Result[0].Meta.RegularMarketPrice, 'E', -1, 64)}
 	if err = writeRow(w, row); err != nil {
 		return err
 	}
@@ -97,7 +108,7 @@ func logQuotes(symbol string, w *csv.Writer) error {
 }
 
 func writeHeader(w *csv.Writer) error {
-	if err := w.Write([]string{"bid", "ask", "regular_market_price"}); err != nil {
+	if err := w.Write([]string{"regular_market_price"}); err != nil {
 		return err
 	}
 	w.Flush()
