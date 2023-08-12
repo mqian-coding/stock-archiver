@@ -86,6 +86,7 @@ func makeNewCSV(name string) (*os.File, error) {
 }
 
 func logQuotes(ticker string, w *csv.Writer) error {
+	start := time.Now()
 	req := api.InitDefaultRequest(ticker)
 	q, err := req.GetQuote()
 	if err != nil {
@@ -100,7 +101,9 @@ func logQuotes(ticker string, w *csv.Writer) error {
 		return errors.New("error in returned data")
 	}
 	row := []string{
-		strconv.FormatFloat(q.Chart.Result[0].Meta.RegularMarketPrice, 'E', -1, 64)}
+		start.String(),
+		strconv.FormatFloat(q.Chart.Result[0].Meta.RegularMarketPrice, 'E', -1, 64),
+	}
 	if err = writeRow(w, row); err != nil {
 		return err
 	}
@@ -108,7 +111,10 @@ func logQuotes(ticker string, w *csv.Writer) error {
 }
 
 func writeHeader(w *csv.Writer) error {
-	if err := w.Write([]string{"regular_market_price"}); err != nil {
+	if err := w.Write([]string{
+		"timestamp",
+		"regular_market_price",
+	}); err != nil {
 		return err
 	}
 	w.Flush()
