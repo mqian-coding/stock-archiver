@@ -2,7 +2,7 @@
 
 Add the tickers for which you'd like csv logging as program args:
 
-  --s AAPL --s GOOG --s MSFT --i 5
+`--s AAPL --s GOOG --s MSFT --i 5`
 
 Would log data for Apple, Google, Microsoft every 5 seconds.
 
