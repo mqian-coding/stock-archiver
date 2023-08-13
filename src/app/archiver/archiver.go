@@ -87,6 +87,8 @@ func makeNewCSV(name string) (*os.File, error) {
 
 func logQuotes(ticker string, w *csv.Writer) error {
 	start := time.Now()
+	// TODO: make into go func
+	// Get regular market price
 	req := api.InitDefaultRequest(ticker)
 	q, err := req.GetQuote()
 	if err != nil {
@@ -100,9 +102,21 @@ func logQuotes(ticker string, w *csv.Writer) error {
 	if q.Chart.Error != nil {
 		return errors.New("error in returned data")
 	}
+
+	// Get BidAsk Info (prices and volumes)
+	baReq := api.InitBidAskRequest(ticker)
+	ba, err := baReq.GetBidAsk()
+	if err != nil {
+		return err
+	}
+
 	row := []string{
-		start.String(),
-		strconv.FormatFloat(q.Chart.Result[0].Meta.RegularMarketPrice, 'E', -1, 64),
+		start.Format("15:04:05"),
+		strconv.FormatFloat(q.Chart.Result[0].Meta.RegularMarketPrice, 'f', -1, 64),
+		strconv.FormatFloat(ba.BidPrice, 'f', -1, 64),
+		strconv.FormatInt(ba.BidVolume, 10),
+		strconv.FormatFloat(ba.AskPrice, 'f', -1, 64),
+		strconv.FormatInt(ba.AskVolume, 10),
 	}
 	if err = writeRow(w, row); err != nil {
 		return err
@@ -114,6 +128,10 @@ func writeHeader(w *csv.Writer) error {
 	if err := w.Write([]string{
 		"timestamp",
 		"regular_market_price",
+		"bid_price",
+		"ask_price",
+		"bid_volume",
+		"ask_volume",
 	}); err != nil {
 		return err
 	}
